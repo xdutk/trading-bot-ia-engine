@@ -1,0 +1,8 @@
+.env
+.git
+__pycache__
+*.pyc
+MODELOS_ENTRENADOS/
+DATOS_PARA_ENTRENAR_NPZ/
+bot_state.json
+live_trades_log.txt

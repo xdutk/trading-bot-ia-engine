@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.log
+*.tmp
+*.json
+mis_claves.txt
+MODELOS_ENTRENADOS/
+DATOS_PARA_ENTRENAR_NPZ/

@@ -1,0 +1,12 @@
+ccxt
+pandas
+numpy
+tensorflow
+joblib
+pandas-ta
+requests
+python-dotenv
+hmmlearn
+scikit-learn
+xgboost
+psutil
