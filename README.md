@@ -34,10 +34,11 @@ To train the models from scratch on your local machine, follow this exact execut
 ### Phase 3: Data Preparation
 * `python training/prepare_multitarget_data.py`: Cleans, normalizes, and packages the generated data into `.npz` arrays ready for neural network ingestion.
 
-### Phase 4: Model Training
+### Phase 4: Model Training & Meta-Model Generation
 * `python training/analisis_unsupervised_hmm_v2.py`: Trains the Hidden Markov Model to recognize latent market states (Bull, Bear, Ranging, High Volatility).
-* `python training/train_ensemble.py`: Trains the core predictive models on the prepared data.
-* `python training/entrenar_gerente.py`: Trains the Meta-Model (The Manager) to supervise the ensemble's decisions.
+* `python training/train_ensemble.py`: Trains the core predictive models (The Analysts) on the prepared data.
+* `python training/minero_datos_masivo.py`: **(The Simulator)** Runs the trained ensemble over 4 years of historical data to generate a massive dataset (`DATASET_GERENTE_MASIVO_V3.csv`) detailing every AI success and failure.
+* `python training/entrenar_gerente.py`: Trains the Meta-Model (The Manager) using the simulated dataset to learn when to trust or veto the ensemble's signals.
 
 ## 📂 Repository Structure
 
