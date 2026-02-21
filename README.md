@@ -5,115 +5,102 @@
 ![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker)
 ![Status](https://img.shields.io/badge/Status-Production-green?style=for-the-badge)
 
-**Stellarium AI** is an autonomous, high-frequency algorithmic trading engine designed for cryptocurrency futures markets. It implements a **Hybrid AI Architecture** that combines Unsupervised Learning (HMM) for market regime detection, Deep Learning for pattern recognition, and Gradient Boosting (XGBoost) for trade quality assurance.
+**Stellarium AI** is an autonomous, high-frequency algorithmic trading engine designed for cryptocurrency markets. It implements a **Hybrid AI Architecture** that combines Unsupervised Learning (HMM) for market regime detection, Deep Learning for pattern recognition, and Gradient Boosting/Ensemble methods for trade quality assurance.
 
-> **Key Differentiator:** Unlike standard bots, Stellarium features a "Manager" meta-model that vets every trade signal against historical probabilities, dynamically adjusting leverage based on confidence levels.
+> **Key Differentiator:** Unlike standard bots, Stellarium features a "Manager" meta-model that vets every trade signal against historical probabilities, dynamically adjusting leverage based on confidence levels and current market regimes.
 
 ## 🏗️ System Architecture
 
-The system follows a modular microservices-like architecture within a containerized environment:
+The system follows a modular pipeline within a containerized environment:
 
-```mermaid
-graph TD
-    A[Market Data Stream] -->|AsyncIO| B(Feature Engineering)
+1. **Market Data Stream:** Async data ingestion from Binance.
+2. **Feature Engineering:** Calculation of technical indicators and market context.
+3. **Multi-Model Consensus:** - Unsupervised AI (HMM) detects the current market regime.
+   - Ensemble Models generate tactical trade signals.
+4. **The Manager (Meta-Model):** A secondary AI layer that evaluates the probability of a signal's success, acting as a strict risk filter.
+5. **Execution Engine:** Dynamic position sizing and order execution via API.
 
-    subgraph Analysis_Core [Multi-Model Consensus Layer]
-        direction TB
-        B --> C1{HMM Regime}
-        B --> C2{Macro Context IA}
-        B --> C3{Tactic IA 1H}
-    end
+## ⚙️ The AI Training Pipeline (Step-by-Step)
 
-    C1 & C2 & C3 --> D[Dynamic Strategy Selector]
-    D -->|Filtered Candidates| E[Deep Learning Inference]
-    E -->|Raw Signal| F[The Manager XGBoost]
-    F -->|Risk Score| G{Execution Engine}
-    G -->|Approved| H[Binance API]
-    G -->|Vetoed| I[Log & Discard]
-```
+To train the models from scratch on your local machine, follow this exact execution order:
 
-🧠 Core Components
+### Phase 1: Data Acquisition
+* `python descargar_data.py`: Downloads the Top 20 cryptocurrencies (Market Reference/Indicator).
+* `python descargar_data_universal.py`: Downloads the main asset dataset. You can easily modify the asset list within this file while keeping the strict structure.
 
-Market Context (HMM): Uses hmmlearn to classify market conditions into latent states (e.g., Low Volatility Bull, High Volatility Crash).
+### Phase 2: Feature Engineering & Context
+* The system uses `MODULOS/labeling_objetivo.py` and `MODULOS/market_context.py` to calculate technical indicators, establish the market context, and create the target labels for the AI.
 
-Signal Generators (TensorFlow): A suite of Neural Networks trained on specific strategies (Trend Following, Mean Reversion, Breakout).
+### Phase 3: Data Preparation
+* `python training/prepare_multitarget_data.py`: Cleans, normalizes, and packages the generated data into `.npz` arrays ready for neural network ingestion.
 
-The Manager (Meta-Model): A secondary ML layer that predicts the probability of a signal's success. It acts as a risk filter, reducing false positives.
+### Phase 4: Model Training
+* `python training/analisis_unsupervised_hmm_v2.py`: Trains the Hidden Markov Model to recognize latent market states (Bull, Bear, Ranging, High Volatility).
+* `python training/train_ensemble.py`: Trains the core predictive models on the prepared data.
+* `python training/entrenar_gerente.py`: Trains the Meta-Model (The Manager) to supervise the ensemble's decisions.
 
-Predictive Audit: A backtesting module that continually validates the model's predictive power against fresh data.
+## 📂 Repository Structure
 
-📂 Repository Structure
-
-This repository is organized into the full Machine Learning lifecycle:
-```
-SUBIDA/
-├── main.py                  # Production Orchestrator
-├── requirements.txt         # Dependencies
-├── Dockerfile               # Container Configuration
-├── .gitignore               # Security Rules
+```text
+├── main.py                     # Production Orchestrator
+├── descargar_data.py           # Top 20 Market Data Downloader
+├── descargar_data_universal.py # Universal/Custom Asset Downloader
+├── requirements.txt            # Dependencies
+├── Dockerfile                  # Container Configuration
 │
-├── MODULOS/                 # Core Logic & Helpers
-├── ESTRATEGIAS/             # Technical Indicators
+├── MODULOS/                    # Core Logic & Feature Engineering
+│   ├── labeling_objetivo.py
+│   └── market_context.py
 │
-├── training/                # AI Lab (Data Mining & Training)
-│   ├── train_manager_model.py
-│   ├── train_neural_nets.py
-│   ├── hmm_analysis.py
-│   └── data_miner.py
+├── ESTRATEGIAS/                # Technical Strategies & Indicators
 │
-├── backtesting/             # Validation Engines
+├── training/                   # AI Lab (Data Mining & Training)
+│   ├── analisis_unsupervised_hmm_v2.py
+│   ├── prepare_multitarget_data.py
+│   ├── train_ensemble.py
+│   ├── entrenar_gerente.py
+│   ├── calibrar_agresividad_fina.py
+│   └── minero_datos_masivo.py
+│
+├── backtesting/                # Validation Engines
 │   ├── backtest_engine.py
 │   └── audit_predictive_power.py
 │
-└── IA_FINAL_CHECKS/         # System Integrity & Calibration
-    ├── check_hmm.py             # Hidden Markov Model Validator
-    └── hyper_calibration_matrix.py # Hyperparameter Tuning
+└── IA_FINAL_CHECKS/            # System Integrity & Calibration
+    ├── check_hmm.py
+    └── hyper_calibration_matrix.py
 ```
-🚀 Key Features
 
-Fault Tolerance: Implements a JSON-based state recovery system (Crash Recovery). The bot can restart after a server failure without losing track of open positions.
-
-Real-Time Command & Control: Full integration with Telegram API for remote monitoring, manual overrides, and "Panic Mode" (Kill Switch).
-
-Dynamic Risk Management:
-
-Auto-Fuse: Stops trading if daily drawdown exceeds 5%.
-
-Volatility Guard: Automatically pauses trading during extreme anomalies detected by the HMM.
-
-Smart Sizing: Position size is calculated based on volatility (ATR) and AI confidence.
-
-🛠️ Setup & Installation
+🚀 Setup & Installation
 Prerequisites: Docker & Docker Compose (Recommended) or Python 3.10+.
 
 1. Clone the Repo
+
+```bash
+git clone [https://github.com/xdutk/trading-bot-ia-engine.git](https://github.com/xdutk/trading-bot-ia-engine.git)
+cd trading-bot-ia-engine
 ```
-Bash
-git clone [https://github.com/xdutk/trading-ia-engine.git](https://github.com/xdutk/trading-ia-engine.git)
-cd trading-ia-engine
-```
+
 2. Environment Configuration
+Create a .env file in the root directory (this is explicitly ignored by Git for security):
 
-Create a .env file in the root directory (not included in repo for security):
+```bash
+BINANCE_API_KEY=your_api_key_here
+BINANCE_SECRET_KEY=your_secret_key_here
+```
 
-```
-BINANCE_API_KEY=your_key
-BINANCE_SECRET_KEY=your_secret
-TELEGRAM_TOKEN=your_token
-TELEGRAM_CHAT_ID=your_id
-```
-3. Build & Run with Docker
-```
-Bash
+3. Run with Docker
+
+```Bash
 docker build -t stellarium-bot .
 docker run -d --env-file .env --name stellarium-v1 stellarium-bot
 ```
+
 ⚠️ Disclaimer & Usage
 
-Models: Pre-trained binary models (.keras, .pkl) are excluded from this repository to protect IP and reduce size. Use the scripts in training/ to generate your own models.
+Models: Pre-trained models (.h5, .pkl, etc.) and historical data .csv files are intentionally excluded from this repository to protect IP and reduce size. Use the scripts in the training/ pipeline to generate your own models locally.
 
-Educational Use: This software is for educational and portfolio demonstration purposes. Trading cryptocurrency futures involves significant risk.
+Educational Use: This software is for educational and portfolio demonstration purposes. Trading cryptocurrency futures involves significant financial risk.
 
 Author: Xavier Dutka
-
 Python Developer | AI & Quantitative Trading Enthusiast
