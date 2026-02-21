@@ -77,17 +77,18 @@ Prerequisites: Docker & Docker Compose (Recommended) or Python 3.10+.
 
 1. Clone the Repo
 
-```bash
+```Bash
 git clone [https://github.com/xdutk/trading-bot-ia-engine.git](https://github.com/xdutk/trading-bot-ia-engine.git)
 cd trading-bot-ia-engine
 ```
-
 2. Environment Configuration
 Create a .env file in the root directory (this is explicitly ignored by Git for security):
 
-```bash
+```Fragmento de código
 BINANCE_API_KEY=your_api_key_here
 BINANCE_SECRET_KEY=your_secret_key_here
+TELEGRAM_TOKEN=your_telegram_bot_token
+TELEGRAM_CHAT_ID=your_telegram_chat_id
 ```
 
 3. Run with Docker
@@ -97,9 +98,43 @@ docker build -t stellarium-bot .
 docker run -d --env-file .env --name stellarium-v1 stellarium-bot
 ```
 
-⚠️ Disclaimer & Usage
+🕹️ Usage & Execution
+Once your models are trained, you can run the system in either simulation or live mode. Ensure your .env file is properly configured with Binance and Telegram credentials before proceeding.
 
-Models: Pre-trained models (.h5, .pkl, etc.) and historical data .csv files are intentionally excluded from this repository to protect IP and reduce size. Use the scripts in the training/ pipeline to generate your own models locally.
+1. Backtesting (Validation)
+Before risking real capital, validate your AI models against historical data:
+
+```Bash
+python backtesting/backtest_engine.py
+```
+This engine simulates the bot's precise behavior over historical data. It outputs a detailed console report including Win Rate, Profit Factor, and PnL by Strategy, and automatically generates an equity curve chart (resultado_backtest_v14.png) to visualize performance.
+
+2. Live Trading (Production)
+To start the trading engine, run the main orchestrator:
+
+```Bash
+python main.py
+```
+
+Operational Modes:
+
+Paper Trading (Default): The bot processes live market data and logs simulated trades. Controlled by the PAPER_TRADING = True flag in main.py.
+
+Real Money: The bot executes real orders via the Binance API. Set PAPER_TRADING = False or switch it dynamically via Telegram.
+
+📱 Telegram Command & Control (C2)
+Stellarium AI features a robust remote control system via Telegram. Once main.py is running, send /help to your bot to access the full suite of commands. Key features include:
+
+/status: Check system uptime, RAM/CPU usage, and active trades.
+
+/mode REAL / /mode PAPER: Hot-swap between simulation and live trading.
+
+/pnl: View real-time financial results.
+
+/cerrar: Panic Button. Instantly closes all AI-managed positions at market price.
+
+⚠️ Disclaimer & Usage
+Models: Pre-trained models (.keras, .pkl, etc.) and historical data .csv files are intentionally excluded from this repository to protect IP and reduce size. Use the scripts in the training/ pipeline to generate your own models locally.
 
 Educational Use: This software is for educational and portfolio demonstration purposes. Trading cryptocurrency futures involves significant financial risk.
 
